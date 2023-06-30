@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/genshin_showcase/node_modules
+/genshin_showcase/.next
 /.pnp
 .pnp.js
 
