@@ -20,3 +20,20 @@ https://github.com/onfuns/nestjs-blog/tree/master 这个项目感觉不错，学
 
 ## 2023/06/30
 最近跟着b站那个视频继续做一个site，跟着敲也能学到东西。最近的目标是跟着这个敲完。
+
+## 2023/07/19
+昨天百思不得其解，为什么在 playwright 里的 testcase 里，加一个引用本地其他模块的 import 就会报错？且 IDE 没有报错。
+
+怀疑说 playwright 在执行时用了自己的 tsconfig，使用了不同的 baseUrl（因为引用 playwright 模块时用了个别名）
+
+今天一下找到原因了，在引用本地模块时需要加上本地模块所属文件的扩展名。
+
+研究了一下，这个是 ESM 的引用方式（ESM: import/export CJS: require/module.exports/exports），而 node 的官方文档里明写着“以相对路径或绝对路径引用模块时需要明确扩展名”。但是，实际项目中很多引用并没有扩展名啊！故查，什么情况下需要扩展名，什么情况下不需要。
+
+结果是：在浏览器原生环境里 import 是需要明确指定扩展名的。经过打包工具转译的 case 中，则不需要指定扩展名（会由打包工具转译为 cjs 的形式）。
+
+那使用npx playwright test 的命令时，是使用了 ESM 的模块引用方式吗？于是看 playwright 的源码。
+
+粗浅地看了，项目太复杂了。大概是有一个 testFileLoader，扫描项目所需的依赖并加载，扫描项目里包含的测试回调函数，并调用该函数，以此完成测试。
+
+那么使用npx，就是在 nodejs 环境中执行 node 代码咯，那当然是在浏览器原生环境执行代码。所以，引用时不加文件扩展名，执行时是不认识的。
